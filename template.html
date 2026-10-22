@@ -1,0 +1,678 @@
+<title>Douze Points for the Neighbours</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.27.0/plotly.min.js"></script>
+<style>
+/* Layout: a single reading column of numbered views under one sticky filter bar —
+   every view reads the same filters and the same selected pair. */
+:root {
+  --bg: #f4f5f8;
+  --surface: #ffffff;
+  --ink: #12151c;
+  --ink-2: #4f5566;
+  --muted: #7a8091;
+  --line: #dde0e8;
+  --grid: #eceef3;
+  --accent: #4b3bc4;
+  --accent-soft: #ebe8fb;
+  --pos: #2a6fc9;
+  --pos-strong: #184f95;
+  --neg: #d23f3e;
+  --mid: #e9e8e4;
+  --land: #e7e9ee;
+  --other-dot: #9aa0ae;
+  --s1: #2a78d6; --s2: #eb6834;
+  --c-nordic: #1baf7a; --c-balkan: #eb6834; --c-soviet: #6250d6; --c-baltic: #eda100;
+  --c-uk: #e87ba4; --c-benelux: #008300;
+  --font-display: "Unbounded", "Arial Black", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111318; --surface: #1a1d24; --ink: #eef0f4; --ink-2: #b9bdc9; --muted: #8b90a0;
+    --line: #2d313b; --grid: #252932; --accent: #9d92f0; --accent-soft: #2a2648;
+    --pos: #5598e7; --pos-strong: #86b6ef; --neg: #e66767; --mid: #383835; --land: #252932;
+    --other-dot: #6c7282; --s1: #3987e5; --s2: #d95926;
+    --c-nordic: #199e70; --c-balkan: #d95926; --c-soviet: #9085e9; --c-baltic: #c98500;
+    --c-uk: #d55181; --c-benelux: #008300;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111318; --surface: #1a1d24; --ink: #eef0f4; --ink-2: #b9bdc9; --muted: #8b90a0;
+  --line: #2d313b; --grid: #252932; --accent: #9d92f0; --accent-soft: #2a2648;
+  --pos: #5598e7; --pos-strong: #86b6ef; --neg: #e66767; --mid: #383835; --land: #252932;
+  --other-dot: #6c7282; --s1: #3987e5; --s2: #d95926;
+  --c-nordic: #199e70; --c-balkan: #d95926; --c-soviet: #9085e9; --c-baltic: #c98500;
+  --c-uk: #d55181; --c-benelux: #008300;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--font-body);
+  font-size: 15px; line-height: 1.55;
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); }
+.wrap {
+  max-width: 1180px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+header.hero { padding-block: 48px 28px; }
+.eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+h1 {
+  font-family: var(--font-display); font-weight: 700; font-size: clamp(30px, 5.2vw, 56px);
+  line-height: 1.04; letter-spacing: -0.02em; margin: 10px 0 16px; text-wrap: balance; max-width: 16ch;
+}
+h1 em { font-style: normal; color: var(--accent); }
+.lede { max-width: 65ch; color: var(--ink-2); font-size: 17px; margin: 0; }
+.lede b { color: var(--ink); font-weight: 600; }
+
+/* filter bar */
+.bar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20;
+  background: var(--surface); border-block: 1px solid var(--line);
+}
+.bar .wrap { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: end; padding-block: 12px; }
+.ctl { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.ctl > span { font-family: var(--font-mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.ctl .row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+select, button, input[type=range] { font: inherit; font-size: 14px; }
+select {
+  background: var(--bg); color: var(--ink); border: 1px solid var(--line); border-radius: 6px;
+  padding: 6px 8px; min-height: 34px;
+}
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.seg button {
+  background: var(--bg); color: var(--ink-2); border: 0; padding: 6px 11px; min-height: 34px; cursor: pointer;
+}
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: #fff; }
+:root[data-theme="dark"] .seg button[aria-pressed="true"] { color: #12151c; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .seg button[aria-pressed="true"] { color: #12151c; } }
+button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+input[type=range] { accent-color: var(--accent); width: 120px; }
+.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 13px; min-width: 2ch; display: inline-block; }
+
+/* sections */
+main { padding-block: 28px 64px; display: flex; flex-direction: column; gap: 44px; }
+section.view { display: flex; flex-direction: column; gap: 14px; }
+.vhead { display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: baseline; justify-content: space-between; }
+.vhead h2 { font-family: var(--font-display); font-weight: 500; font-size: 22px; letter-spacing: -0.01em; margin: 0; text-wrap: balance; }
+.vhead h2 .n { font-family: var(--font-mono); font-size: 13px; color: var(--accent); margin-right: 10px; vertical-align: 3px; }
+.vnote { color: var(--ink-2); max-width: 70ch; margin: 0; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px; min-width: 0; }
+.plot { width: 100%; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--ink-2); align-items: center; }
+.sw { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+.ln { display: inline-block; width: 26px; border-top: 3px solid; margin-right: 6px; vertical-align: 3px; }
+.sub-ctl { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: end; }
+
+/* scorecard table */
+.tbl-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+th { font-family: var(--font-mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+td.r, th.r { text-align: right; font-variant-numeric: tabular-nums; font-family: var(--font-mono); font-size: 13px; }
+td .sw { margin-right: 8px; }
+tr.click { cursor: pointer; }
+tr.click:hover td { background: var(--bg); }
+
+.two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
+@media (max-width: 640px) { .bar { position: static; } }
+@media (max-width: 860px) { .two { grid-template-columns: minmax(0, 1fr); } }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.stat { border-left: 3px solid var(--line); padding: 2px 0 2px 12px; }
+.stat .k { font-family: var(--font-mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.stat .v { font-family: var(--font-display); font-size: 24px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.stat .d { font-size: 13px; color: var(--ink-2); }
+.callout { background: var(--accent-soft); border-radius: 8px; padding: 12px 14px; color: var(--ink); max-width: 80ch; }
+.method { color: var(--ink-2); max-width: 72ch; }
+.method h3 { font-family: var(--font-display); font-weight: 500; color: var(--ink); font-size: 17px; margin: 10px 0 -8px; }
+.method p { margin: 0; }
+.method code { font-family: var(--font-mono); font-size: 13px; background: var(--surface); border: 1px solid var(--line); padding: 1px 5px; border-radius: 4px; }
+.empty { padding: 40px 12px; text-align: center; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<header class="hero wrap">
+  <div class="eyebrow">Data Visualization · Eurovision votes 1957–2023</div>
+  <h1>Do neighbours give each other <em>douze points</em>?</h1>
+  <p class="lede">Every country hands out a fixed set of points each year: 1–8, 10 and 12, and since 2016 two such sets, one from a jury and one from the public, so one country can now give another up to 24 points. This page measures how many
+  <b>extra points</b> a country gives a specific other country compared with what that country normally receives,
+  and asks which geographical clusters exist, how strong and consistent they are, and which country pairs drive them.</p>
+</header>
+
+<div class="bar">
+  <div class="wrap">
+    <label class="ctl"><span>Period</span>
+      <div class="row">
+        <select id="y0" aria-label="First year"></select><span class="num">–</span><select id="y1" aria-label="Last year"></select>
+        <select id="era" aria-label="Preset period">
+          <option value="">Preset…</option>
+          <option value="1993-2023">1993–2023 · project period</option>
+          <option value="1975-1996">1975–1996 · juries only</option>
+          <option value="1997-2008">1997–2008 · televote era</option>
+          <option value="2009-2023">2009–2023 · jury + televote</option>
+          <option value="1957-2023">1957–2023 · everything</option>
+        </select>
+      </div>
+    </label>
+    <div class="ctl"><span>Shows</span>
+      <div class="seg" id="stage">
+        <button type="button" data-v="F" aria-pressed="true">Finals</button>
+        <button type="button" data-v="FS" aria-pressed="false">Finals + semis</button>
+      </div>
+    </div>
+    <label class="ctl"><span>Min. shared years</span>
+      <div class="row"><input type="range" id="minYears" min="1" max="20" value="5"><span class="num" id="minYearsV">5</span></div>
+    </label>
+    <label class="ctl"><span>Clusters</span>
+      <select id="scheme">
+        <option value="original">5 clusters (proposal)</option>
+        <option value="split">6 clusters · Baltic split out</option>
+      </select>
+    </label>
+  </div>
+</div>
+
+<main class="wrap">
+
+  <section class="view" id="map">
+    <div class="vhead">
+      <h2><span class="n">01</span>Where are the clusters?</h2>
+    </div>
+    <p class="vnote">Each line joins two countries in the same cluster. The thicker the line, the more extra points they give each other on average.
+    Hover a country to see who it favours most.</p>
+    <div class="panel">
+      <div id="mapPlot" class="plot"></div>
+      <div class="legend" id="mapLegend"></div>
+    </div>
+  </section>
+
+  <section class="view" id="dots">
+    <div class="vhead"><h2><span class="n">02</span>How strong and how consistent is each cluster?</h2></div>
+    <p class="vnote">Each dot is one directed relationship inside a cluster, for example Denmark → Sweden. Further right means more extra points.
+    Larger dots have more shared years behind them. The grey row shows every pair that crosses clusters, which is what “no favoritism” looks like in this data.
+    The dark tick marks each row's average. Click a dot to see that pair year by year.</p>
+    <div class="panel"><div id="dotPlot" class="plot"></div></div>
+    <div class="panel tbl-wrap"><table id="scoreTbl"></table></div>
+  </section>
+
+  <section class="view" id="heat">
+    <div class="vhead">
+      <h2><span class="n">03</span>Which pairs drive the pattern?</h2>
+      <div class="sub-ctl">
+        <label class="ctl"><span>Show</span><select id="heatCluster"></select></label>
+        <div class="ctl"><span>Colour by</span>
+          <div class="seg" id="heatMetric">
+            <button type="button" data-v="fav" aria-pressed="true">Favoritism</button>
+            <button type="button" data-v="years" aria-pressed="false">Years observed</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="vnote">Rows give points, columns receive them. The colour scale is fixed and centred on zero, so the same shade
+    means the same thing in every cluster. Empty cells have fewer shared years than the minimum. Compare a cell with its mirror across the diagonal to see whether a relationship is mutual. Click a cell to see it year by year.</p>
+    <div class="panel tbl-wrap"><div id="heatPlot" class="plot"></div><div class="empty" id="heatEmpty" hidden>No pairs meet the minimum number of shared years. Lower the minimum or widen the period.</div></div>
+  </section>
+
+  <section class="view" id="detail">
+    <div class="vhead">
+      <h2><span class="n">04</span><span id="detailTitle">Pair detail</span></h2>
+      <div class="sub-ctl">
+        <label class="ctl"><span>From</span><select id="pairA"></select></label>
+        <label class="ctl"><span>To</span><select id="pairB"></select></label>
+      </div>
+    </div>
+    <p class="vnote">A high average can come from one freak year. This view shows every show where both countries took part, in both directions.</p>
+    <div class="stats" id="pairStats"></div>
+    <div class="panel"><div id="pairPlot" class="plot"></div></div>
+  </section>
+
+  <section class="view" id="who">
+    <div class="vhead"><h2><span class="n">05</span>Is it the public or the juries?</h2></div>
+    <p class="vnote">Since 2016 each country publishes its jury and televote results separately. Here the same favoritism measure is computed on each half alone,
+    averaged over all within-cluster pairs. Uses the period filter, clipped to 2016 or later.</p>
+    <div class="panel"><div id="whoPlot" class="plot"></div><div class="empty" id="whoEmpty" hidden>Jury and televote are only published separately from 2016. Move the period end to 2016 or later.</div></div>
+    <p class="callout" id="whoNote"></p>
+  </section>
+
+  <section class="view method" id="method">
+    <div class="vhead"><h2><span class="n">06</span>How favoritism is measured</h2></div>
+    <h3>One number per country pair per show</h3>
+    <p>For voter A and recipient B in a single show: <code>share = points A gave B ÷ all points A gave</code>.
+    B's normal level is the average share B got from every other voter in that show. Favoritism is the difference, multiplied by 58 (the points in one 1–8, 10, 12 set),
+    so it reads as extra points. +5 means A gave B about five points more than B usually gets from a country.</p>
+    <h3>Why shares and not raw points</h3>
+    <p>From 1975 to 2015 each country gave one set of 1–8, 10, 12 (58 points in total), so 12 was the maximum to any one country.
+    Since 2016 the jury and the televote each give a full set, so a country hands out 116 points and can give a single country up to 24.
+    Raw points would make every recent year look twice as friendly. Dividing by what each voter handed out, and expressing the result on one 58-point set,
+    makes 2023 directly comparable with 1995. Early contests used other systems, and the same division handles those too.</p>
+    <h3>Why the baseline leaves A out</h3>
+    <p>If A's own vote counted towards B's normal level, a strong A → B vote would raise the bar it is measured against and hide part of the favoritism.</p>
+    <h3>Reading the averages</h3>
+    <p>Averages are over shows where both countries took part. <b>Consistency</b> is the share of those shows where the favoritism was above zero.
+    Pairs below the minimum number of shared years are hidden everywhere, because a single year can produce an extreme value.
+    Favoritism also captures shared taste, language, diaspora and song quality, so it shows patterns in voting, not why they happen.</p>
+  </section>
+</main>
+
+<script>
+const DATA = /*__DATA__*/null;
+// map outlines ship with the page (Natural Earth 1:50m via Plotly), so nothing is fetched at runtime
+window.PlotlyGeoAssets = { topojson: { world_50m: /*__TOPO__*/null } };
+
+/* ---------- static lookups ---------- */
+const C = DATA.countries, N = C.length;
+const idxOf = Object.fromEntries(C.map((c, i) => [c.id, i]));
+const R = DATA.rows, NR = R.y.length;
+const CLUSTER_VAR = {
+  "Nordic": "--c-nordic", "Balkan": "--c-balkan", "Former Soviet / Baltic": "--c-soviet",
+  "Former Soviet (non-Baltic)": "--c-soviet", "Baltic": "--c-baltic",
+  "UK–Ireland–Malta": "--c-uk", "Benelux": "--c-benelux",
+};
+const LABEL_POS = {  // where the cluster name sits on the map
+  "Nordic": [64.5, 14], "Balkan": [43.3, 21.5], "Former Soviet / Baltic": [51.5, 38],
+  "Former Soviet (non-Baltic)": [50.5, 38], "Baltic": [57.6, 27.5],
+  "UK–Ireland–Malta": [55.6, -5.5], "Benelux": [51.6, 4.5],
+};
+
+const state = {
+  y0: 1993, y1: 2023, stage: "F", minYears: 5, scheme: "original",
+  heatCluster: "__all", heatMetric: "fav",
+  a: idxOf.dk, b: idxOf.se,
+};
+
+const tok = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const name = i => C[i].name;
+const fmt = v => { const r = Math.round(v * 10) / 10; return (r > 0 ? "+" : r < 0 ? "−" : "") + Math.abs(r).toFixed(1); };
+const pct = v => Math.round(v * 100) + "%";
+const isPhone = () => window.matchMedia("(max-width: 640px)").matches;
+
+function clusters() {
+  const sch = DATA.schemes[state.scheme];
+  const of = new Array(N).fill(null);
+  for (const [cl, ids] of Object.entries(sch)) for (const id of ids) if (id in idxOf) of[idxOf[id]] = cl;
+  return { names: Object.keys(sch), of, members: Object.fromEntries(Object.entries(sch).map(([k, v]) => [k, v.filter(id => id in idxOf).map(id => idxOf[id])])) };
+}
+
+/* ---------- aggregation (runs on every filter change) ---------- */
+let AGG = null;
+function aggregate() {
+  const sum = new Float64Array(N * N), n = new Uint16Array(N * N), pos = new Uint16Array(N * N);
+  const yrs = Array.from({ length: N * N }, () => null);
+  for (let i = 0; i < NR; i++) {
+    const y = R.y[i];
+    if (y < state.y0 || y > state.y1) continue;
+    if (state.stage === "F" && R.s[i] === 1) continue;
+    const k = R.f[i] * N + R.t[i], v = R.ex[i] / 100;
+    sum[k] += v; n[k]++; if (v > 0) pos[k]++;
+    (yrs[k] || (yrs[k] = new Set())).add(y);
+  }
+  const fav = new Float64Array(N * N).fill(NaN), cons = new Float64Array(N * N), years = new Uint16Array(N * N);
+  for (let k = 0; k < N * N; k++) if (n[k]) {
+    fav[k] = sum[k] / n[k]; cons[k] = pos[k] / n[k]; years[k] = yrs[k].size;
+  }
+  AGG = { fav, cons, years, ok: k => years[k] >= state.minYears && !isNaN(fav[k]) };
+}
+
+/* ---------- shared plot styling ---------- */
+function divScale() {
+  return [[0, "#9c2b2a"], [0.25, tok("--neg")], [0.5, tok("--mid")], [0.75, tok("--pos")], [1, tok("--pos-strong")]];
+}
+function baseLayout(extra = {}) {
+  return Object.assign({
+    paper_bgcolor: tok("--surface"), plot_bgcolor: tok("--surface"),
+    font: { family: tok("--font-body"), color: tok("--ink-2"), size: 12 },
+    hoverlabel: { bgcolor: tok("--surface"), bordercolor: tok("--line"), font: { family: tok("--font-body"), color: tok("--ink"), size: 13 } },
+    margin: { l: 10, r: 10, t: 10, b: 10 },
+  }, extra);
+}
+const CFG = { responsive: true, displayModeBar: false };
+function axis(extra = {}) {
+  return Object.assign({ gridcolor: tok("--grid"), zerolinecolor: tok("--line"), linecolor: tok("--line"), tickfont: { color: tok("--ink-2") }, automargin: true }, extra);
+}
+
+/* ---------- 01 map ---------- */
+// Deliberately simple: no controls. Lines = within-cluster pairs, hover a country for its favourites.
+function drawMap() {
+  const cl = clusters();
+  const traces = [];
+  const favs = i => {  // a country's three biggest favourites in the current period
+    const list = [];
+    for (let b = 0; b < N; b++) { const k = i * N + b; if (b !== i && AGG.ok(k)) list.push([b, AGG.fav[k]]); }
+    list.sort((p, q) => q[1] - p[1]);
+    return list.slice(0, 3).map(([b, v]) => `${name(b)} ${fmt(v)}`).join("<br>") || "Too few shared years";
+  };
+  const groups = [...cl.names.map(g => ({ g, idx: cl.members[g], color: tok(CLUSTER_VAR[g]) })),
+    { g: "Not in a cluster", idx: C.map((c, i) => i).filter(i => !cl.of[i]), color: tok("--land") }];
+  for (const { g, idx, color } of groups) {
+    const ii = idx.filter(i => C[i].iso3);
+    traces.push({
+      type: "choropleth", locationmode: "ISO-3", locations: ii.map(i => C[i].iso3), z: ii.map(() => 1),
+      text: ii.map(i => `<b>${name(i)}</b> · ${g}<br><span style="font-size:11px">Gives most extra points to</span><br>${favs(i)}`),
+      hovertemplate: "%{text}<extra></extra>",
+      colorscale: [[0, color], [1, color]], showscale: false,
+      marker: { line: { color: tok("--surface"), width: 0.8 }, opacity: g === "Not in a cluster" ? 1 : 0.55 },
+    });
+  }
+  const bins = [[0, 1.2], [3, 2.4], [5, 3.8], [8, 5.5]];
+  const lines = {};
+  for (let a = 0; a < N; a++) for (let b = a + 1; b < N; b++) {
+    if (C[a].lat == null || C[b].lat == null || !cl.of[a] || cl.of[a] !== cl.of[b]) continue;
+    const vals = [a * N + b, b * N + a].filter(k => AGG.ok(k)).map(k => AGG.fav[k]);
+    if (!vals.length) continue;
+    const v = vals.reduce((s, x) => s + x, 0) / vals.length;
+    if (Math.abs(v) < 1.5) continue;
+    let w = 0; for (let j = 0; j < bins.length; j++) if (Math.abs(v) >= bins[j][0]) w = j;
+    const key = (v >= 0 ? "p" : "n") + w;
+    const L = lines[key] || (lines[key] = { lat: [], lon: [], w: bins[w][1], sign: v >= 0 });
+    L.lat.push(C[a].lat, C[b].lat, null); L.lon.push(C[a].lon, C[b].lon, null);
+  }
+  for (const L of Object.values(lines).sort((p, q) => p.w - q.w)) {
+    traces.push({ type: "scattergeo", mode: "lines", lat: L.lat, lon: L.lon, hoverinfo: "skip",
+      line: { width: L.w, color: L.sign ? tok("--pos-strong") : tok("--neg") }, opacity: 0.8 });
+  }
+  traces.push({ type: "scattergeo", mode: "text", hoverinfo: "skip",
+    lat: cl.names.map(g => LABEL_POS[g][0]), lon: cl.names.map(g => LABEL_POS[g][1]),
+    text: cl.names.map(g => g.replace("Former Soviet", "Fmr. Soviet")),
+    textfont: { family: tok("--font-mono"), size: isPhone() ? 9 : 11, color: tok("--ink") } });
+  const layout = baseLayout({
+    height: isPhone() ? 400 : 600, showlegend: false, dragmode: false,
+    geo: {
+      projection: { type: "mercator" }, resolution: 50, lonaxis: { range: [-25, 50] }, lataxis: { range: [33, 69] },
+      showland: true, landcolor: tok("--land"), showocean: true, oceancolor: tok("--surface"), bgcolor: tok("--surface"),
+      showcountries: true, countrycolor: tok("--surface"), showcoastlines: false, showframe: false, showlakes: false,
+    },
+  });
+  Plotly.react("mapPlot", traces, layout, { displayModeBar: false, scrollZoom: false, responsive: true });
+  document.getElementById("mapLegend").innerHTML =
+    cl.names.map(g => `<span><span class="sw" style="background:${tok(CLUSTER_VAR[g])};opacity:.7"></span>${g}</span>`).join("") +
+    `<span><span class="ln" style="border-color:${tok("--pos-strong")}"></span>Give each other more than normal</span>` +
+    `<span><span class="ln" style="border-color:${tok("--neg")}"></span>Less than normal</span>` +
+    `<span>Thicker = stronger</span>`;
+}
+
+/* ---------- 02 dot plot + scorecard ---------- */
+function hash(a, b) { const x = Math.sin(a * 127.1 + b * 311.7) * 43758.5453; return x - Math.floor(x); }
+function drawDots() {
+  const cl = clusters(), rows = [...cl.names, "Cross-cluster pairs"];
+  const nRow = rows.length, yOf = r => nRow - 1 - r;
+  const pts = { x: [], y: [], s: [], text: [], cd: [] }, other = { x: [], y: [], text: [], cd: [] };
+  const per = rows.map(() => []);
+  for (let a = 0; a < N; a++) for (let b = 0; b < N; b++) {
+    if (a === b) continue; const k = a * N + b; if (!AGG.ok(k)) continue;
+    const v = AGG.fav[k], ca = cl.of[a], cb = cl.of[b];
+    const tip = `<b>${name(a)} → ${name(b)}</b><br>${fmt(v)} pts · ${AGG.years[k]} yrs · ${pct(AGG.cons[k])} positive`;
+    if (ca && ca === cb) {
+      const r = rows.indexOf(ca); per[r].push(v);
+      pts.x.push(v); pts.y.push(yOf(r) + (hash(a, b) - 0.5) * 0.5); pts.s.push(Math.min(7 + AGG.years[k] * 0.55, 20));
+      pts.text.push(tip); pts.cd.push([a, b]);
+    } else {
+      per[nRow - 1].push(v);
+      other.x.push(v); other.y.push(yOf(nRow - 1) + (hash(a, b) - 0.5) * 0.5); other.text.push(tip); other.cd.push([a, b]);
+    }
+  }
+  const seen = new Set(), top = [];  // label the two strongest cross-cluster pairs, once per pair
+  for (const [x, i] of other.x.map((x, i) => [x, i]).sort((p, q) => q[0] - p[0])) {
+    const key = [...other.cd[i]].sort().join("-"); if (seen.has(key)) continue; seen.add(key); top.push([x, i]); if (top.length === 2) break;
+  }
+  const notes = top.map(([x, i], j) => ({ x, y: other.y[i], text: `${C[other.cd[i][0]].id.toUpperCase()} ⇄ ${C[other.cd[i][1]].id.toUpperCase()}`,
+    showarrow: true, arrowhead: 0, arrowwidth: 1, arrowcolor: tok("--ink-2"), ax: j ? -30 : 0, ay: j ? 22 : -26,
+    font: { family: tok("--font-mono"), size: 11, color: tok("--ink") } }));
+  const means = per.map(a => a.length ? a.reduce((s, x) => s + x, 0) / a.length : NaN);
+  const traces = [
+    { type: "scattergl", mode: "markers", x: other.x, y: other.y, text: other.text, customdata: other.cd, hovertemplate: "%{text}<extra></extra>",
+      marker: { size: 5, color: tok("--other-dot"), opacity: 0.28 } },
+    { type: "scatter", mode: "markers", x: pts.x, y: pts.y, text: pts.text, customdata: pts.cd, hovertemplate: "%{text}<extra></extra>",
+      marker: { size: pts.s, color: pts.x, colorscale: divScale(), cmin: -10, cmax: 10, opacity: 0.85, line: { color: tok("--surface"), width: 1.5 } } },
+    { type: "scatter", mode: "markers", x: means, y: rows.map((_, r) => yOf(r)), hoverinfo: "skip",
+      marker: { symbol: "line-ns", size: 34, line: { color: tok("--ink"), width: 3 } } },
+  ];
+  const layout = baseLayout({
+    height: 90 + nRow * 62, showlegend: false, hovermode: "closest",
+    margin: { l: 10, r: 20, t: 10, b: 50 },
+    xaxis: axis({ title: { text: "Favoritism (extra points, on one 1–12 set per show)", font: { color: tok("--ink-2") } }, range: [-8, 14], zeroline: false, dtick: 2 }),
+    yaxis: axis({ tickvals: rows.map((_, r) => yOf(r)), ticktext: rows, range: [-0.6, nRow - 0.4], showgrid: false, zeroline: false, fixedrange: true }),
+    annotations: notes,
+    shapes: [{ type: "line", x0: 0, x1: 0, y0: -0.6, y1: nRow - 0.4, line: { color: tok("--ink-2"), width: 1.5, dash: "dot" } }],
+  });
+  Plotly.react("dotPlot", traces, layout, CFG);
+
+  // scorecard
+  const head = `<thead><tr><th>Cluster</th><th class="r">Pairs</th><th class="r">Avg. favoritism</th><th class="r">Pairs above 0</th><th class="r">Median years</th><th>Strongest pair</th><th>Weakest pair</th></tr></thead>`;
+  const body = rows.map((g, r) => {
+    let best = null, worst = null, ys = [];
+    for (let a = 0; a < N; a++) for (let b = 0; b < N; b++) {
+      if (a === b) continue; const kk = a * N + b; if (!AGG.ok(kk)) continue;
+      const inside = cl.of[a] && cl.of[a] === cl.of[b];
+      if (r < nRow - 1 ? !(inside && cl.of[a] === g) : inside) continue;
+      ys.push(AGG.years[kk]);
+      if (!best || AGG.fav[kk] > AGG.fav[best[0] * N + best[1]]) best = [a, b];
+      if (!worst || AGG.fav[kk] < AGG.fav[worst[0] * N + worst[1]]) worst = [a, b];
+    }
+    ys.sort((p, q) => p - q);
+    const vals = per[r], above = vals.filter(v => v > 0).length;
+    const pr = p => p ? `${C[p[0]].id.toUpperCase()} → ${C[p[1]].id.toUpperCase()} <span class="num">${fmt(AGG.fav[p[0] * N + p[1]])}</span>` : "—";
+    const sw = r < nRow - 1 ? `<span class="sw" style="background:${tok(CLUSTER_VAR[g])}"></span>` : `<span class="sw" style="background:${tok("--other-dot")}"></span>`;
+    return `<tr><td>${sw}${g}</td><td class="r">${vals.length}</td><td class="r">${vals.length ? fmt(means[r]) : "—"}</td>
+      <td class="r">${vals.length ? pct(above / vals.length) : "—"}</td><td class="r">${ys.length ? ys[Math.floor(ys.length / 2)] : "—"}</td>
+      <td>${pr(best)}</td><td>${pr(worst)}</td></tr>`;
+  }).join("");
+  document.getElementById("scoreTbl").innerHTML = head + `<tbody>${body}</tbody>`;
+}
+
+/* ---------- 03 heatmap ---------- */
+function fillHeatSelect() {
+  const cl = clusters(), sel = document.getElementById("heatCluster"), cur = state.heatCluster;
+  sel.innerHTML = `<option value="__all">All clusters (within-cluster only)</option>` +
+    cl.names.map(g => `<option value="${g}">${g}</option>`).join("") +
+    `<option value="__europe">Every country (incl. cross-cluster)</option>`;
+  sel.value = [...sel.options].some(o => o.value === cur) ? cur : "__all";
+  state.heatCluster = sel.value;
+}
+function drawHeat() {
+  const cl = clusters(), mode = state.heatCluster, metric = state.heatMetric;
+  let order = [];
+  if (mode === "__all" || mode === "__europe") for (const g of cl.names) order.push(...cl.members[g]);
+  else order = cl.members[mode].slice();
+  if (mode === "__europe") {
+    const rest = C.map((c, i) => i).filter(i => !cl.of[i] && C[i].iso3 && C[i].lat != null).sort((p, q) => name(p).localeCompare(name(q)));
+    order.push(...rest);
+  }
+  // drop countries with no qualifying cells
+  order = order.filter(a => order.some(b => a !== b && (AGG.ok(a * N + b) || AGG.ok(b * N + a))));
+  const heatEl = document.getElementById("heatPlot"), heatEmpty = document.getElementById("heatEmpty");
+  heatEmpty.hidden = order.length > 0; heatEl.hidden = !order.length;
+  if (!order.length) { Plotly.purge(heatEl); return; }
+  const z = [], txt = [], hov = [], showText = order.length <= 34;
+  for (const a of order) {
+    const zr = [], tr = [], hr = [];
+    for (const b of order) {
+      const k = a * N + b, inside = cl.of[a] && cl.of[a] === cl.of[b];
+      const allowed = mode === "__europe" || inside;
+      if (a === b || !allowed || !AGG.ok(k)) { zr.push(null); tr.push(""); hr.push(""); continue; }
+      const v = metric === "fav" ? AGG.fav[k] : AGG.years[k];
+      zr.push(v); tr.push(metric === "fav" ? fmt(v) : String(v));
+      hr.push(`<b>${name(a)} → ${name(b)}</b><br>Favoritism ${fmt(AGG.fav[k])} pts<br>${AGG.years[k]} shared years · ${pct(AGG.cons[k])} positive`);
+    }
+    z.push(zr); txt.push(tr); hov.push(hr);
+  }
+  const labels = order.map(i => C[i].id.toUpperCase());
+  const scale = metric === "fav"
+    ? { colorscale: divScale(), zmin: -10, zmax: 10, zmid: 0, colorbar: { title: { text: "Extra pts", side: "right" }, thickness: 12, outlinewidth: 0, tickfont: { color: tok("--ink-2") } } }
+    : { colorscale: [[0, tok("--mid")], [1, tok("--pos-strong")]], zmin: state.minYears, zmax: state.y1 - state.y0 + 1 > 30 ? 40 : Math.max(state.minYears + 1, state.y1 - state.y0 + 1), colorbar: { title: { text: "Years", side: "right" }, thickness: 12, outlinewidth: 0, tickfont: { color: tok("--ink-2") } } };
+  const trace = Object.assign({
+    type: "heatmap", z, x: labels, y: labels, customdata: order.map(a => order.map(b => [a, b])),
+    text: hov, hovertemplate: "%{text}<extra></extra>", xgap: 2, ygap: 2, hoverongaps: false,
+  }, scale);
+  const traces = [trace];
+  // cell labels as a separate text layer so we control ink colour by cell value
+  if (showText) {
+    const tx = [], ty = [], tt = [], tc = [];
+    order.forEach((a, i) => order.forEach((b, j) => {
+      if (txt[i][j] === "") return; tx.push(labels[j]); ty.push(labels[i]); tt.push(txt[i][j]);
+      const v = z[i][j]; const strong = metric === "fav" ? Math.abs(v) > 6 : v > (scale.zmin + scale.zmax) / 2 + 4;
+      tc.push(strong ? "#ffffff" : tok("--ink"));
+    }));
+    traces.push({ type: "scatter", mode: "text", x: tx, y: ty, text: tt, textfont: { family: tok("--font-mono"), size: order.length > 16 ? 8.5 : 11, color: tc }, hoverinfo: "skip" });
+  }
+  // cluster separators + selected cell
+  const shapes = [];
+  if (mode === "__all" || mode === "__europe") {
+    let pos = 0;
+    for (const g of cl.names) {
+      const len = order.filter(i => cl.of[i] === g).length; if (!len) continue;
+      shapes.push({ type: "rect", x0: pos - 0.5, x1: pos + len - 0.5, y0: pos - 0.5, y1: pos + len - 0.5, line: { color: tok(CLUSTER_VAR[g]), width: 2 } });
+      pos += len;
+    }
+  }
+  const cell = order.length > 34 ? 18 : order.length > 26 ? 30 : order.length > 16 ? 26 : 44;
+  const size = Math.max(order.length * cell + 90, 300);
+  const layout = baseLayout({
+    height: size, width: Math.max(size + 90, 320), autosize: false, showlegend: false,
+    margin: { l: 50, r: 10, t: 50, b: 10 },
+    xaxis: axis({ side: "top", showgrid: false, tickfont: { family: tok("--font-mono"), size: 11, color: tok("--ink-2") }, title: { text: "Receives points →", font: { size: 12 } } }),
+    yaxis: axis({ autorange: "reversed", showgrid: false, tickfont: { family: tok("--font-mono"), size: 11, color: tok("--ink-2") }, title: { text: "Gives points →", font: { size: 12 } } }),
+    shapes,
+  });
+  Plotly.react("heatPlot", traces, layout, { displayModeBar: false });
+}
+
+/* ---------- 04 pair detail ---------- */
+function fillPairSelects() {
+  const opts = C.map((c, i) => [i, c.name]).filter(([i]) => C[i].iso3 || C[i].id === "yu" || C[i].id === "cs").sort((p, q) => p[1].localeCompare(q[1]));
+  for (const id of ["pairA", "pairB"]) document.getElementById(id).innerHTML = opts.map(([i, n]) => `<option value="${i}">${n}</option>`).join("");
+}
+function series(a, b) {
+  const by = new Map();
+  for (let i = 0; i < NR; i++) {
+    if (R.f[i] !== a || R.t[i] !== b) continue;
+    const y = R.y[i]; if (y < state.y0 || y > state.y1) continue;
+    if (state.stage === "F" && R.s[i] === 1) continue;
+    const e = by.get(y) || { s: 0, n: 0 }; e.s += R.ex[i] / 100; e.n++; by.set(y, e);
+  }
+  const ys = [...by.keys()].sort((p, q) => p - q);
+  return { x: ys, y: ys.map(y => by.get(y).s / by.get(y).n) };
+}
+function drawDetail() {
+  const a = state.a, b = state.b;
+  document.getElementById("pairA").value = a; document.getElementById("pairB").value = b;
+  document.getElementById("detailTitle").textContent = `${name(a)} ⇄ ${name(b)}`;
+  const k1 = a * N + b, k2 = b * N + a;
+  const stat = (k, x, y, col) => {
+    const has = !isNaN(AGG.fav[k]);
+    return `<div class="stat" style="border-color:${col}"><div class="k">${C[x].id.toUpperCase()} → ${C[y].id.toUpperCase()}</div>
+      <div class="v">${has ? fmt(AGG.fav[k]) : "—"}</div>
+      <div class="d">${has ? `${AGG.years[k]} shared years · ${pct(AGG.cons[k])} of shows above zero${AGG.years[k] < state.minYears ? " · below your minimum" : ""}` : "Never in the same show in this period"}</div></div>`;
+  };
+  const cl = clusters();
+  const rel = cl.of[a] && cl.of[a] === cl.of[b] ? `Both in ${cl.of[a]}` : `${cl.of[a] || "No cluster"} / ${cl.of[b] || "no cluster"}`;
+  document.getElementById("pairStats").innerHTML = stat(k1, a, b, tok("--s1")) + stat(k2, b, a, tok("--s2")) +
+    `<div class="stat"><div class="k">Clusters</div><div class="d" style="font-size:15px;color:var(--ink)">${rel}</div></div>`;
+  const s1 = series(a, b), s2 = series(b, a);
+  const tr = (s, col, lab) => ({ type: "scatter", mode: "lines+markers", x: s.x, y: s.y, name: lab, connectgaps: false,
+    line: { color: col, width: 2 }, marker: { size: 8, color: col, line: { color: tok("--surface"), width: 2 } },
+    hovertemplate: `${lab}<br>%{x}: <b>%{y:+.1f}</b> pts<extra></extra>` });
+  const layout = baseLayout({
+    height: 360, margin: { l: 10, r: 10, t: 40, b: 40 }, hovermode: "x unified",
+    legend: { orientation: "h", x: 0, y: 1.14, font: { color: tok("--ink") } },
+    xaxis: axis({ range: [state.y0 - 0.5, state.y1 + 0.5], dtick: state.y1 - state.y0 > 30 ? 5 : 2 }),
+    yaxis: axis({ title: { text: "Extra points that year" }, zeroline: true, zerolinewidth: 1.5, zerolinecolor: tok("--ink-2") }),
+  });
+  Plotly.react("pairPlot", [tr(s1, tok("--s1"), `${name(a)} → ${name(b)}`), tr(s2, tok("--s2"), `${name(b)} → ${name(a)}`)], layout, CFG);
+}
+
+/* ---------- 05 jury vs televote ---------- */
+function drawWho() {
+  const cl = clusters(), y0 = Math.max(state.y0, 2016), y1 = state.y1;
+  const note = document.getElementById("whoNote");
+  if (y1 < 2016) {
+    Plotly.purge("whoPlot"); document.getElementById("whoPlot").hidden = true; document.getElementById("whoEmpty").hidden = false;
+    note.textContent = ""; note.hidden = true; return;
+  }
+  document.getElementById("whoPlot").hidden = false; document.getElementById("whoEmpty").hidden = true;
+  const acc = Object.fromEntries(cl.names.map(g => [g, { te: [0, 0], ju: [0, 0] }]));
+  for (let i = 0; i < NR; i++) {
+    const y = R.y[i]; if (y < y0 || y > y1) continue;
+    if (state.stage === "F" && R.s[i] === 1) continue;
+    const ga = cl.of[R.f[i]]; if (!ga || ga !== cl.of[R.t[i]]) continue;
+    if (R.te[i] !== null) { acc[ga].te[0] += R.te[i] / 100; acc[ga].te[1]++; }
+    if (R.ju[i] !== null) { acc[ga].ju[0] += R.ju[i] / 100; acc[ga].ju[1]++; }
+  }
+  const m = p => p[1] ? p[0] / p[1] : null;
+  const te = cl.names.map(g => m(acc[g].te)), ju = cl.names.map(g => m(acc[g].ju));
+  const bar = (vals, col, lab) => ({ type: "bar", orientation: "h", y: cl.names, x: vals, name: lab, marker: { color: col },
+    text: vals.map(v => v === null ? "" : fmt(v)), textposition: "outside", cliponaxis: false,
+    textfont: { family: tok("--font-mono"), color: tok("--ink") }, hovertemplate: `${lab}: <b>%{x:+.2f}</b> pts<extra>%{y}</extra>` });
+  const layout = baseLayout({
+    height: 120 + cl.names.length * 56, barmode: "group", bargap: 0.35, bargroupgap: 0.12,
+    margin: { l: 10, r: 40, t: 40, b: 40 },
+    legend: { orientation: "h", x: 0, y: 1.1, font: { color: tok("--ink") }, traceorder: "normal" },
+    xaxis: axis({ title: { text: `Average within-cluster favoritism, ${y0}–${y1}` }, zeroline: true, zerolinecolor: tok("--ink-2") }),
+    yaxis: axis({ autorange: "reversed", showgrid: false }),
+  });
+  Plotly.react("whoPlot", [bar(te, tok("--s1"), "Televote"), bar(ju, tok("--s2"), "Jury")], layout, CFG);
+  const diffs = cl.names.map((g, i) => [g, te[i] - ju[i]]).filter(d => !isNaN(d[1]));
+  const teWins = diffs.filter(d => d[1] > 0).length;
+  const big = diffs.slice().sort((p, q) => Math.abs(q[1]) - Math.abs(p[1]))[0];
+  note.hidden = false;
+  note.textContent = `In ${teWins} of ${diffs.length} clusters the public favours its neighbours more than the juries do. ` +
+    (big ? `The largest gap is in ${big[0]}: ${fmt(big[1])} points ${big[1] > 0 ? "more from the televote" : "more from the juries"}.` : "");
+}
+
+/* ---------- wiring ---------- */
+function renderAll() { aggregate(); drawMap(); drawDots(); drawHeat(); drawDetail(); drawWho(); }
+function select(a, b, jump) {
+  state.a = a; state.b = b; drawDetail();
+  if (jump) document.getElementById("detail").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+}
+
+function initControls() {
+  const [ymin, ymax] = DATA.years, y0 = document.getElementById("y0"), y1 = document.getElementById("y1");
+  for (let y = ymin; y <= ymax; y++) { y0.add(new Option(y, y)); y1.add(new Option(y, y)); }
+  y0.value = state.y0; y1.value = state.y1;
+  const per = () => { let a = +y0.value, b = +y1.value; if (a > b) [a, b] = [b, a]; state.y0 = a; state.y1 = b; y0.value = a; y1.value = b; document.getElementById("era").value = ""; renderAll(); };
+  y0.onchange = per; y1.onchange = per;
+  document.getElementById("era").onchange = e => { if (!e.target.value) return; const [a, b] = e.target.value.split("-").map(Number); y0.value = a; y1.value = b; state.y0 = a; state.y1 = b; renderAll(); e.target.value = ""; };
+  const seg = (id, key, after) => document.getElementById(id).addEventListener("click", e => {
+    const btn = e.target.closest("button"); if (!btn) return;
+    for (const b of e.currentTarget.querySelectorAll("button")) b.setAttribute("aria-pressed", b === btn);
+    state[key] = btn.dataset.v; after();
+  });
+  seg("stage", "stage", renderAll);
+  seg("heatMetric", "heatMetric", drawHeat);
+  const my = document.getElementById("minYears");
+  my.oninput = () => { state.minYears = +my.value; document.getElementById("minYearsV").textContent = my.value; renderAll(); };
+  document.getElementById("scheme").onchange = e => { state.scheme = e.target.value; fillHeatSelect(); renderAll(); };
+  document.getElementById("heatCluster").onchange = e => { state.heatCluster = e.target.value; drawHeat(); };
+  fillPairSelects();
+  document.getElementById("pairA").onchange = e => select(+e.target.value, state.b);
+  document.getElementById("pairB").onchange = e => select(state.a, +e.target.value);
+}
+function bindClicks() {
+  const hook = id => {
+    const el = document.getElementById(id);
+    if (el._bound || !el.on) return; el._bound = true;
+    el.on("plotly_click", ev => { const p = ev.points && ev.points[0]; const cd = p && p.customdata; if (Array.isArray(cd) && cd.length === 2 && cd[0] !== cd[1]) select(cd[0], cd[1], true); });
+  };
+  ["dotPlot", "heatPlot"].forEach(hook);
+}
+
+initControls();
+fillHeatSelect();
+renderAll();
+bindClicks();
+// heatmap may be rebuilt from an empty state; re-bind after each draw
+const _drawHeat = drawHeat; drawHeat = function () { _drawHeat(); bindClicks(); };
+
+// redraw with the right colours when the theme changes
+const rethemed = () => renderAll();
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", rethemed);
+new MutationObserver(rethemed).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+let rz; window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { drawMap(); drawDots(); drawHeat(); }, 200); });
+</script>
